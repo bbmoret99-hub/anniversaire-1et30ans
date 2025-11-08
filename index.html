@@ -94,26 +94,12 @@
       font-size: 0.9em;
     }
 
-    /* 📱 Ajustements mobiles */
     @media (max-width: 600px) {
-      body {
-        padding: 1.2rem 0.8rem;
-      }
-      h1 {
-        font-size: 1.7em;
-      }
-      h2 {
-        font-size: 1.1em;
-        margin-bottom: 1em;
-      }
-      .dish {
-        font-size: 0.95rem;
-        padding: 0.9rem;
-      }
-      button {
-        font-size: 0.95rem;
-        padding: 0.7rem 1rem;
-      }
+      body { padding: 1.2rem 0.8rem; }
+      h1 { font-size: 1.7em; }
+      h2 { font-size: 1.1em; margin-bottom: 1em; }
+      .dish { font-size: 0.95rem; padding: 0.9rem; }
+      button { font-size: 0.95rem; padding: 0.7rem 1rem; }
     }
   </style>
 </head>
@@ -124,70 +110,61 @@
 
   <div class="dish-list" id="dishList"></div>
 
-  <button id="resetBtn">Réinitialiser mes choix</button>
+  <button id="refreshBtn">Rafraîchir la liste</button>
 
   <footer>Thème vert sapin & doré ✨🌲 – On a hâte de fêter ça avec vous !</footer>
 
   <script>
-    const dishes = [
-      "Cake au thon 1",
-      "Cake au thon 2",
-      "Cake au lardon 1",
-      "Cake au lardon 2",
-      "Quiche 1",
-      "Quiche 2",
-      "Salade de riz",
-      "Salade de pâtes",
-      "Taboulé",
-      "Toasts",
-      "Crudités et sauces",
-      "Plateau de charcuterie 1",
-      "Plateau de charcuterie 2",
-      "Plateau de fromage 1",
-      "Chips",
-      "Rillettes",
-      "Cookies",
-      "Gâteau 1",
-      "Gâteau 2",
-      "Gâteau 3"
-    ];
-
     const dishList = document.getElementById("dishList");
-    const takenDishes = JSON.parse(localStorage.getItem("takenDishes")) || [];
+    const userName = prompt("Ton prénom pour cocher un plat ?") || "Anonyme";
 
-    function renderDishes() {
+    // 🔹 METTRE ICI TON URL DE LA WEB APP GOOGLE APPS
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbznW2YSZ7-8HDu4wkq-8IyZP_b5j_gIPARatCXWDXyj07Q7Rxf44lKFUeGnigpM9l8W/exec"; // <-- Remplace par ton URL Web App
+
+    // Récupérer les plats depuis Google Sheets
+    async function fetchDishes(){
+      try {
+        const res = await fetch(SHEET_URL);
+        const data = await res.json(); // [[Plat, PrisPar], ...]
+        renderDishes(data);
+      } catch(err){
+        console.error("Erreur lors de la récupération des plats :", err);
+        dishList.innerHTML = "<p>Impossible de charger les plats. Vérifie ton URL Web App.</p>";
+      }
+    }
+
+    function renderDishes(data){
       dishList.innerHTML = "";
-      dishes.forEach(dish => {
+      data.forEach(([plat, prisPar])=>{
         const div = document.createElement("div");
         div.className = "dish";
-        div.textContent = dish;
-
-        if (takenDishes.includes(dish)) {
-          div.classList.add("taken");
-        }
-
-        div.addEventListener("click", () => selectDish(dish, div));
+        div.textContent = plat;
+        if(prisPar) div.classList.add("taken");
+        div.addEventListener("click", ()=>selectDish(plat, div));
         dishList.appendChild(div);
       });
     }
 
-    function selectDish(dish, element) {
-      if (takenDishes.includes(dish)) return;
-      if (confirm(`Souhaites-tu apporter "${dish}" ?`)) {
-        takenDishes.push(dish);
-        localStorage.setItem("takenDishes", JSON.stringify(takenDishes));
-        element.classList.add("taken");
+    async function selectDish(plat, element){
+      if(element.classList.contains("taken")) return;
+      if(confirm(`Souhaites-tu apporter "${plat}" ?`)){
+        try {
+          await fetch(SHEET_URL, {
+            method: "POST",
+            body: JSON.stringify({plat: plat, user: userName})
+          });
+          element.classList.add("taken");
+        } catch(err){
+          alert("Impossible de cocher le plat. Vérifie ton URL Web App.");
+        }
       }
     }
 
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      if (confirm("Réinitialiser tes choix ?")) {
-        localStorage.removeItem("takenDishes");
-        location.reload();
-      }
-    });
+    document.getElementById("refreshBtn").addEventListener("click", fetchDishes);
 
-    renderDishes();
+    // Charger la liste au chargement de la page
+    fetchDishes();
   </script>
+
 </body>
 </html>
