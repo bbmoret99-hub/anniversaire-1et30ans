@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anniversaire 1 an & 30 ans 🎂</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #0b3d2e, #f7f2d0);
+      color: #f4f4f4;
+      text-align: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #f7d774;
+      font-size: 2em;
+      margin-bottom: 0.3em;
+    }
+
+    h2 {
+      color: #e8c85d;
+      margin-top: 0;
+      margin-bottom: 1.5em;
+      font-weight: 500;
+      font-size: 1.2em;
+    }
+
+    .dish-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.8rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .dish {
+      background-color: rgba(255, 255, 255, 0.95);
+      border: 2px solid #e1b954;
+      border-radius: 12px;
+      padding: 1rem;
+      min-width: 120px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+      color: #0b3d2e;
+      font-weight: 500;
+      font-size: 1rem;
+      user-select: none;
+    }
+
+    .dish:hover,
+    .dish:active {
+      background-color: #fff6da;
+      transform: scale(1.05);
+    }
+
+    .dish.taken {
+      background-color: #ddd;
+      color: #666;
+      border-color: #aaa;
+      text-decoration: line-through;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button {
+      background-color: #e1b954;
+      color: #0b3d2e;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 1.4rem;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background 0.3s ease, transform 0.2s ease;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    button:hover,
+    button:active {
+      background-color: #f5d673;
+      transform: scale(1.05);
+    }
+
+    footer {
+      margin-top: 2em;
+      color: #f4f4f4;
+      font-size: 0.9em;
+    }
+
+    /* 📱 Ajustements mobiles */
+    @media (max-width: 600px) {
+      body {
+        padding: 1.2rem 0.8rem;
+      }
+      h1 {
+        font-size: 1.7em;
+      }
+      h2 {
+        font-size: 1.1em;
+        margin-bottom: 1em;
+      }
+      .dish {
+        font-size: 0.95rem;
+        padding: 0.9rem;
+      }
+      button {
+        font-size: 0.95rem;
+        padding: 0.7rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎂 Anniversaire 1 an & 30 ans 🎉</h1>
+  <h2>Choisis un plat à apporter pour le soir 💚✨</h2>
+
+  <div class="dish-list" id="dishList"></div>
+
+  <button id="resetBtn">Réinitialiser mes choix</button>
+
+  <footer>Thème vert sapin & doré ✨🌲 – On a hâte de fêter ça avec vous !</footer>
+
+  <script>
+    const dishes = [
+      "Cake au thon 1",
+      "Cake au thon 2",
+      "Cake au lardon 1",
+      "Cake au lardon 2",
+      "Quiche 1",
+      "Quiche 2",
+      "Salade de riz",
+      "Salade de pâtes",
+      "Taboulé",
+      "Toasts",
+      "Crudités et sauces",
+      "Plateau de charcuterie 1",
+      "Plateau de charcuterie 2",
+      "Plateau de fromage 1",
+      "Chips",
+      "Rillettes",
+      "Cookies",
+      "Gâteau 1",
+      "Gâteau 2",
+      "Gâteau 3"
+    ];
+
+    const dishList = document.getElementById("dishList");
+    const takenDishes = JSON.parse(localStorage.getItem("takenDishes")) || [];
+
+    function renderDishes() {
+      dishList.innerHTML = "";
+      dishes.forEach(dish => {
+        const div = document.createElement("div");
+        div.className = "dish";
+        div.textContent = dish;
+
+        if (takenDishes.includes(dish)) {
+          div.classList.add("taken");
+        }
+
+        div.addEventListener("click", () => selectDish(dish, div));
+        dishList.appendChild(div);
+      });
+    }
+
+    function selectDish(dish, element) {
+      if (takenDishes.includes(dish)) return;
+      if (confirm(`Souhaites-tu apporter "${dish}" ?`)) {
+        takenDishes.push(dish);
+        localStorage.setItem("takenDishes", JSON.stringify(takenDishes));
+        element.classList.add("taken");
+      }
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (confirm("Réinitialiser tes choix ?")) {
+        localStorage.removeItem("takenDishes");
+        location.reload();
+      }
+    });
+
+    renderDishes();
+  </script>
+</body>
+</html>
