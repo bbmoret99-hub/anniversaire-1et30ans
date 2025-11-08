@@ -74,7 +74,7 @@
       border-radius: 10px;
       padding: 0.8rem 1.4rem;
       cursor: pointer;
-      margin-top: 1.5rem;
+      margin-top: 1rem;
       font-size: 1rem;
       font-weight: 600;
       transition: background 0.3s ease, transform 0.2s ease;
@@ -111,6 +111,7 @@
   <div class="dish-list" id="dishList"></div>
 
   <button id="refreshBtn">Rafraîchir la liste</button>
+  <button id="resetBtn">Réinitialiser mes choix</button>
 
   <footer>Thème vert sapin & doré ✨🌲 – On a hâte de fêter ça avec vous !</footer>
 
@@ -119,48 +120,70 @@
     const userName = prompt("Ton prénom pour cocher un plat ?") || "Anonyme";
 
     // 🔹 METTRE ICI TON URL DE LA WEB APP GOOGLE APPS
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbznW2YSZ7-8HDu4wkq-8IyZP_b5j_gIPARatCXWDXyj07Q7Rxf44lKFUeGnigpM9l8W/exec"; // <-- Remplace par ton URL Web App
+    const SHEET_URL = "ICI_TA_WEB_APP_URL"; // <-- Remplace par ton URL Web App
 
     // Récupérer les plats depuis Google Sheets
-    async function fetchDishes(){
+    async function fetchDishes() {
       try {
         const res = await fetch(SHEET_URL);
         const data = await res.json(); // [[Plat, PrisPar], ...]
         renderDishes(data);
-      } catch(err){
+      } catch (err) {
         console.error("Erreur lors de la récupération des plats :", err);
         dishList.innerHTML = "<p>Impossible de charger les plats. Vérifie ton URL Web App.</p>";
       }
     }
 
-    function renderDishes(data){
+    function renderDishes(data) {
       dishList.innerHTML = "";
-      data.forEach(([plat, prisPar])=>{
+      data.forEach(([plat, prisPar]) => {
         const div = document.createElement("div");
         div.className = "dish";
         div.textContent = plat;
-        if(prisPar) div.classList.add("taken");
-        div.addEventListener("click", ()=>selectDish(plat, div));
+        if (prisPar) div.classList.add("taken");
+        div.addEventListener("click", () => selectDish(plat, div));
         dishList.appendChild(div);
       });
     }
 
-    async function selectDish(plat, element){
-      if(element.classList.contains("taken")) return;
-      if(confirm(`Souhaites-tu apporter "${plat}" ?`)){
+    async function selectDish(plat, element) {
+      if (element.classList.contains("taken")) return;
+      if (confirm(`Souhaites-tu apporter "${plat}" ?`)) {
         try {
           await fetch(SHEET_URL, {
             method: "POST",
-            body: JSON.stringify({plat: plat, user: userName})
+            body: JSON.stringify({ plat: plat, user: userName })
           });
           element.classList.add("taken");
-        } catch(err){
+        } catch (err) {
           alert("Impossible de cocher le plat. Vérifie ton URL Web App.");
         }
       }
     }
 
+    // Bouton Rafraîchir
     document.getElementById("refreshBtn").addEventListener("click", fetchDishes);
+
+    // Bouton Réinitialiser mes choix
+    document.getElementById("resetBtn").addEventListener("click", async () => {
+      if (confirm("Voulez-vous réinitialiser uniquement vos choix ?")) {
+        try {
+          const res = await fetch(SHEET_URL);
+          const data = await res.json();
+          for (let [plat, prisPar] of data) {
+            if (prisPar === userName) {
+              await fetch(SHEET_URL, {
+                method: "POST",
+                body: JSON.stringify({ plat: plat, user: "" }) // supprimer l'utilisateur
+              });
+            }
+          }
+          fetchDishes(); // Met à jour l'affichage
+        } catch (err) {
+          alert("Impossible de réinitialiser vos choix. Vérifie ton URL Web App.");
+        }
+      }
+    });
 
     // Charger la liste au chargement de la page
     fetchDishes();
